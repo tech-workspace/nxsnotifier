@@ -1,0 +1,3 @@
+MONGODB_URI=mongodb+srv://techworkspacews:UVAum12nXIp9vmz4@cluster0.r8v89oz.mongodb.net/nxs?retryWrites=true&w=majority
+API_BASE_URL=
+PORT=5000

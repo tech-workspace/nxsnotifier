@@ -40,6 +40,20 @@ export default function TabsLayout() {
         }} 
       />
       <Tabs.Screen 
+        name="inquiries" 
+        options={{ 
+          title: 'Inquiries',
+          tabBarLabel: 'Inquiries',
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons 
+              name={focused ? 'list' : 'list-outline'} 
+              size={size} 
+              color={color} 
+            />
+          )
+        }} 
+      />
+      <Tabs.Screen 
         name="profile" 
         options={{ 
           title: 'Profile',
