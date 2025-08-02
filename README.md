@@ -1,4 +1,4 @@
-# NXS Notifier
+# NXS Notifier v1
 
 A React Native Expo app with MongoDB backend for managing inquiries.
 
@@ -21,16 +21,19 @@ nxsnotifier/
 ### 1. Backend Setup
 
 1. Navigate to the backend directory:
+
    ```bash
    cd backend
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    ```
 
 3. Configure environment variables:
+
    - Copy `env.example` to `.env`
    - Update the MongoDB connection string in `.env`
 
@@ -44,11 +47,13 @@ The server will run on `http://localhost:5000`
 ### 2. Frontend Setup
 
 1. Install Expo CLI (if not already installed):
+
    ```bash
    npm install -g @expo/cli
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    ```
@@ -69,6 +74,7 @@ The server will run on `http://localhost:5000`
 ## Database
 
 The app connects directly to MongoDB using the connection string from the `.env` file:
+
 - Database: `nxs`
 - Collection: `inquiries`
 - Schema: `{ name, email, mobile, message, createdAt }`
@@ -85,11 +91,13 @@ The app connects directly to MongoDB using the connection string from the `.env`
 ## Troubleshooting
 
 ### Backend Issues
+
 - Make sure MongoDB connection string is correct
 - Check if port 5000 is available
 - Verify all dependencies are installed
 
 ### Frontend Issues
+
 - For Android emulator, the API URL is set to `10.0.2.2:5000`
 - For iOS simulator, use `localhost:5000`
 - Make sure the backend server is running
@@ -101,4 +109,4 @@ Create a `.env` file in the backend directory:
 ```env
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/nxs
 PORT=5000
-``` 
+```
