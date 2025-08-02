@@ -12,7 +12,7 @@ const Home = () => {
       <Text style={styles.title}>Nexus Plater</Text>
 
       <Text style={{ marginTop: 10, marginBottom: 30, color: '#fff' }}>
-        Here we go.
+
       </Text>
     </View>
   );
