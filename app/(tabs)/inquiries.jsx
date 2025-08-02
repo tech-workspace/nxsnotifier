@@ -12,12 +12,22 @@ import {
   Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getInquiries } from '../services/database';
+import { getInquiries, markInquiryAsRead, checkForNewInquiries } from '../services/database';
+import { useNotifications } from '../context/NotificationContext';
 
-const InquiryItem = ({ item, onPress }) => (
-  <TouchableOpacity style={styles.inquiryItem} onPress={() => onPress(item)}>
+const InquiryItem = ({ item, onPress, isUnread }) => (
+  <TouchableOpacity
+    style={[
+      styles.inquiryItem,
+      isUnread && styles.unreadInquiryItem
+    ]}
+    onPress={() => onPress(item)}
+  >
     <View style={styles.inquiryHeader}>
-      <Text style={styles.inquiryName}>{item.name}</Text>
+      <View style={styles.inquiryTitleContainer}>
+        <Text style={styles.inquiryName}>{item.name}</Text>
+        {isUnread && <View style={styles.unreadBadge} />}
+      </View>
       <Ionicons name="chevron-forward" size={20} color="#FFD700" />
     </View>
     <Text style={styles.inquiryEmail}>{item.email}</Text>
@@ -25,10 +35,15 @@ const InquiryItem = ({ item, onPress }) => (
     <Text style={styles.inquiryPreview} numberOfLines={2}>
       {item.message}
     </Text>
+    {isUnread && (
+      <View style={styles.unreadIndicator}>
+        <Text style={styles.unreadText}>NEW</Text>
+      </View>
+    )}
   </TouchableOpacity>
 );
 
-const InquiryModal = ({ visible, inquiry, onClose }) => (
+const InquiryModal = ({ visible, inquiry, onClose, onMarkAsRead }) => (
   <Modal
     visible={visible}
     animationType="slide"
@@ -65,6 +80,20 @@ const InquiryModal = ({ visible, inquiry, onClose }) => (
             <Text style={styles.detailLabel}>Message</Text>
             <Text style={styles.detailValue}>{inquiry?.message}</Text>
           </View>
+
+          <View style={styles.detailSection}>
+            <Text style={styles.detailLabel}>Timestamp</Text>
+            <Text style={styles.detailValue}>
+              {inquiry?.createdAt ? new Date(inquiry.createdAt).toLocaleString() : 'N/A'}
+            </Text>
+          </View>
+
+          <View style={styles.detailSection}>
+            <Text style={styles.detailLabel}>Status</Text>
+            <Text style={styles.detailValue}>
+              {inquiry?.isRead ? 'Read' : 'Unread'}
+            </Text>
+          </View>
         </ScrollView>
       </View>
     </View>
@@ -74,9 +103,14 @@ const InquiryModal = ({ visible, inquiry, onClose }) => (
 const Inquiries = () => {
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [selectedInquiry, setSelectedInquiry] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [lastFetchTime, setLastFetchTime] = useState(null);
+
+  // Use notification context
+  const { unreadCount, isConnected, decrementUnreadCount } = useNotifications();
 
   useEffect(() => {
     fetchInquiries();
@@ -92,6 +126,21 @@ const Inquiries = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  const triggerNewInquiriesCheck = async () => {
+    try {
+      const result = await checkForNewInquiries();
+      console.log('✅ Checked for new inquiries:', result.found, 'found');
+
+      if (result.found > 0) {
+        // If new inquiries were found, refresh the list
+        await fetchInquiries();
+        Alert.alert('New Inquiries', `${result.found} new inquiry(ies) found!`);
+      }
+    } catch (err) {
+      console.error('❌ Error checking for new inquiries:', err);
+    }
+  };
+
   const fetchInquiries = async () => {
     try {
       setLoading(true);
@@ -101,6 +150,7 @@ const Inquiries = () => {
       console.log('✅ Fetched inquiries successfully:', data);
       console.log('📊 Number of inquiries:', data.length);
       setInquiries(data);
+      setLastFetchTime(new Date());
     } catch (err) {
       console.error('❌ Error fetching inquiries:', err);
       setError('Failed to load inquiries. Please try again.');
@@ -110,9 +160,31 @@ const Inquiries = () => {
     }
   };
 
-  const handleInquiryPress = (inquiry) => {
+  const handleInquiryPress = async (inquiry) => {
     setSelectedInquiry(inquiry);
     setModalVisible(true);
+
+    // Mark as read if it's unread
+    if (!inquiry.isRead) {
+      try {
+        await markInquiryAsRead(inquiry._id);
+        console.log('✅ Marked inquiry as read:', inquiry._id);
+
+        // Update local state
+        setInquiries(prevInquiries =>
+          prevInquiries.map(item =>
+            item._id === inquiry._id
+              ? { ...item, isRead: true }
+              : item
+          )
+        );
+
+        // Update notification context
+        decrementUnreadCount();
+      } catch (err) {
+        console.error('❌ Error marking inquiry as read:', err);
+      }
+    }
   };
 
   const closeModal = () => {
@@ -120,11 +192,62 @@ const Inquiries = () => {
     setSelectedInquiry(null);
   };
 
-  if (loading) {
+  const getUnreadInquiries = () => {
+    return inquiries.filter(inquiry => !inquiry.isRead);
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchInquiries();
+      await triggerNewInquiriesCheck();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleRefreshIconPress = async () => {
+    setRefreshing(true);
+    try {
+      await triggerNewInquiriesCheck();
+      await fetchInquiries();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  if (loading && inquiries.length === 0) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Inquiries</Text>
+          <View style={styles.headerTopRow}>
+            <View style={styles.headerTitleContainer}>
+              <Text style={styles.headerTitle}>Inquiries</Text>
+              {unreadCount > 0 && (
+                <View style={styles.headerBadge}>
+                  <Text style={styles.headerBadgeText}>{unreadCount}</Text>
+                </View>
+              )}
+            </View>
+            <TouchableOpacity
+              style={styles.refreshButton}
+              onPress={handleRefreshIconPress}
+              disabled={refreshing}
+            >
+              <Ionicons
+                name="refresh"
+                size={24}
+                color="#FFD700"
+                style={refreshing && styles.rotatingIcon}
+              />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.connectionStatus}>
+            <View style={[styles.connectionDot, { backgroundColor: isConnected ? '#4CAF50' : '#f44336' }]} />
+            <Text style={styles.connectionText}>
+              {isConnected ? 'Real-time Connected' : 'Real-time Disconnected'}
+            </Text>
+          </View>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#FFD700" />
@@ -138,7 +261,34 @@ const Inquiries = () => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Inquiries</Text>
+          <View style={styles.headerTopRow}>
+            <View style={styles.headerTitleContainer}>
+              <Text style={styles.headerTitle}>Inquiries</Text>
+              {unreadCount > 0 && (
+                <View style={styles.headerBadge}>
+                  <Text style={styles.headerBadgeText}>{unreadCount}</Text>
+                </View>
+              )}
+            </View>
+            <TouchableOpacity
+              style={styles.refreshButton}
+              onPress={handleRefreshIconPress}
+              disabled={refreshing}
+            >
+              <Ionicons
+                name="refresh"
+                size={24}
+                color="#FFD700"
+                style={refreshing && styles.rotatingIcon}
+              />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.connectionStatus}>
+            <View style={[styles.connectionDot, { backgroundColor: isConnected ? '#4CAF50' : '#f44336' }]} />
+            <Text style={styles.connectionText}>
+              {isConnected ? 'Real-time Connected' : 'Real-time Disconnected'}
+            </Text>
+          </View>
         </View>
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle" size={50} color="#ff6b6b" />
@@ -154,8 +304,42 @@ const Inquiries = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Inquiries</Text>
-        <Text style={styles.headerSubtitle}>{inquiries.length} total inquiries</Text>
+        <View style={styles.headerTopRow}>
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>Inquiries</Text>
+            {unreadCount > 0 && (
+              <View style={styles.headerBadge}>
+                <Text style={styles.headerBadgeText}>{unreadCount}</Text>
+              </View>
+            )}
+          </View>
+          <TouchableOpacity
+            style={styles.refreshButton}
+            onPress={handleRefreshIconPress}
+            disabled={refreshing}
+          >
+            <Ionicons
+              name="refresh"
+              size={24}
+              color="#FFD700"
+              style={refreshing && styles.rotatingIcon}
+            />
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.headerSubtitle}>
+          {inquiries.length} total inquiries • {unreadCount} unread
+        </Text>
+        <View style={styles.connectionStatus}>
+          <View style={[styles.connectionDot, { backgroundColor: isConnected ? '#4CAF50' : '#f44336' }]} />
+          <Text style={styles.connectionText}>
+            {isConnected ? 'Real-time Connected' : 'Real-time Disconnected'}
+          </Text>
+        </View>
+        {lastFetchTime && (
+          <Text style={styles.lastUpdateText}>
+            Last updated: {lastFetchTime.toLocaleTimeString()}
+          </Text>
+        )}
       </View>
 
       {inquiries.length === 0 ? (
@@ -168,12 +352,16 @@ const Inquiries = () => {
           data={inquiries}
           keyExtractor={(item) => item._id || item.id}
           renderItem={({ item }) => (
-            <InquiryItem item={item} onPress={handleInquiryPress} />
+            <InquiryItem
+              item={item}
+              onPress={handleInquiryPress}
+              isUnread={!item.isRead}
+            />
           )}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
-          refreshing={loading}
-          onRefresh={fetchInquiries}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
         />
       )}
 
@@ -195,15 +383,52 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 10,
   },
+  headerTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  headerTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#FFD700',
     marginBottom: 5,
   },
+  headerBadge: {
+    backgroundColor: '#FFD700',
+    borderRadius: 15,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginLeft: 10,
+  },
+  headerBadgeText: {
+    color: '#000',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  refreshButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#1a1a1a',
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  rotatingIcon: {
+    transform: [{ rotate: '360deg' }],
+  },
   headerSubtitle: {
     fontSize: 16,
     color: '#666',
+  },
+  lastUpdateText: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 5,
   },
   loadingContainer: {
     flex: 1,
@@ -260,16 +485,31 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#333',
   },
+  unreadInquiryItem: {
+    borderColor: '#FFD700',
+    borderWidth: 2,
+  },
   inquiryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
   },
+  inquiryTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   inquiryName: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#FFD700',
+  },
+  unreadBadge: {
+    backgroundColor: '#FFD700',
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginLeft: 8,
   },
   inquiryEmail: {
     fontSize: 14,
@@ -285,6 +525,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#999',
     lineHeight: 20,
+  },
+  unreadIndicator: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: '#FFD700',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  unreadText: {
+    color: '#000',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   modalOverlay: {
     flex: 1,
@@ -339,6 +593,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
     lineHeight: 24,
+  },
+  connectionStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    backgroundColor: '#2a2a2a',
+  },
+  connectionDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 8,
+  },
+  connectionText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 
