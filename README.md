@@ -1,6 +1,6 @@
 # NXS Notifier
 
-I just made a change here in README file - v1
+I just made a change here in README file - v2
 
 A React Native Expo app with MongoDB backend for managing inquiries with on-demand real-time notifications.
 
