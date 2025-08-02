@@ -17,7 +17,7 @@ import { getInquiries } from '../services/database';
 const InquiryItem = ({ item, onPress }) => (
   <TouchableOpacity style={styles.inquiryItem} onPress={() => onPress(item)}>
     <View style={styles.inquiryHeader}>
-      <Text style={styles.inquiryName}>{item.fullName}</Text>
+      <Text style={styles.inquiryName}>{item.name}</Text>
       <Ionicons name="chevron-forward" size={20} color="#FFD700" />
     </View>
     <Text style={styles.inquiryEmail}>{item.email}</Text>
@@ -44,23 +44,23 @@ const InquiryModal = ({ visible, inquiry, onClose }) => (
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Inquiry Details</Text>
         </View>
-        
+
         <ScrollView style={styles.modalBody}>
           <View style={styles.detailSection}>
-            <Text style={styles.detailLabel}>Full Name</Text>
-            <Text style={styles.detailValue}>{inquiry?.fullName}</Text>
+            <Text style={styles.detailLabel}>Name</Text>
+            <Text style={styles.detailValue}>{inquiry?.name}</Text>
           </View>
-          
+
           <View style={styles.detailSection}>
             <Text style={styles.detailLabel}>Email</Text>
             <Text style={styles.detailValue}>{inquiry?.email}</Text>
           </View>
-          
+
           <View style={styles.detailSection}>
             <Text style={styles.detailLabel}>Mobile</Text>
             <Text style={styles.detailValue}>{inquiry?.mobile}</Text>
           </View>
-          
+
           <View style={styles.detailSection}>
             <Text style={styles.detailLabel}>Message</Text>
             <Text style={styles.detailValue}>{inquiry?.message}</Text>
@@ -80,6 +80,16 @@ const Inquiries = () => {
 
   useEffect(() => {
     fetchInquiries();
+  }, []);
+
+  // Force refresh when component mounts
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.log('🔄 Force refreshing inquiries...');
+      fetchInquiries();
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const fetchInquiries = async () => {
@@ -147,7 +157,7 @@ const Inquiries = () => {
         <Text style={styles.headerTitle}>Inquiries</Text>
         <Text style={styles.headerSubtitle}>{inquiries.length} total inquiries</Text>
       </View>
-      
+
       {inquiries.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="document-text-outline" size={50} color="#666" />
@@ -166,7 +176,7 @@ const Inquiries = () => {
           onRefresh={fetchInquiries}
         />
       )}
-      
+
       <InquiryModal
         visible={modalVisible}
         inquiry={selectedInquiry}

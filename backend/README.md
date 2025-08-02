@@ -44,7 +44,7 @@ The server will run on `http://localhost:5000`
 The `inquiries` collection uses this schema:
 ```javascript
 {
-  fullName: String (required),
+  name: String (required),
   email: String (required),
   mobile: String (required),
   message: String (required),

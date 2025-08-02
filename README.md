@@ -1,87 +1,104 @@
-# NXS Notifier - React Native App
+# NXS Notifier
 
-A React Native app with Appwrite authentication for mobile number and password login/signup.
-
-## Features
-
-- ✅ User registration with mobile number and password
-- ✅ User login with mobile number and password
-- ✅ Protected routes (authentication required)
-- ✅ Logout functionality
-- ✅ Modern UI with proper styling
-- ✅ Form validation
-- ✅ Loading states
-
-## Setup Instructions
-
-### 1. Appwrite Project Setup
-
-1. Go to [Appwrite Console](https://console.appwrite.io/)
-2. Login with your credentials:
-   - Email: Tech.workspace.ws@gmail.com
-   - Password: Workspace2020$$
-3. Create a new project named "nxsnotifier"
-4. Get your Project ID from the project settings
-
-### 2. Update Configuration
-
-Update the `appwrite.config.js` file with your actual project ID:
-
-```javascript
-const client = new Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
-    .setProject('YOUR_ACTUAL_PROJECT_ID'); // Replace with your project ID
-```
-
-### 3. Appwrite Authentication Setup
-
-1. In your Appwrite project, go to "Auth" section
-2. Enable "Email/Password" authentication
-3. Configure the following settings:
-   - Allow registration: Yes
-   - Allow login: Yes
-   - Email verification: Optional (for mobile number auth)
-
-### 4. Install Dependencies
-
-```bash
-npm install
-```
-
-### 5. Run the App
-
-```bash
-npm start
-```
+A React Native Expo app with MongoDB backend for managing inquiries.
 
 ## Project Structure
 
 ```
-app/
-├── _layout.jsx          # Main layout with auth routing
-├── index.jsx            # Home page (protected)
-└── auth/
-    ├── login.jsx        # Login page
-    └── signup.jsx       # Signup page
+nxsnotifier/
+├── app/                    # React Native Expo app
+│   ├── (tabs)/            # Tab navigation screens
+│   ├── services/          # API services
+│   └── config/            # Configuration files
+└── backend/               # Node.js/Express backend
+    ├── server.js          # Main server file
+    ├── seed-data.js       # Database seeding script
+    └── .env               # Environment variables
 ```
 
-## Authentication Flow
+## Setup Instructions
 
-1. **App Launch**: Checks if user is authenticated
-2. **Not Authenticated**: Redirects to login page
-3. **Login/Signup**: User can register or login with mobile number
-4. **Success**: Redirects to home page
-5. **Logout**: Clears session and returns to login
+### 1. Backend Setup
 
-## Notes
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
 
-- Mobile numbers are stored as email addresses (e.g., `1234567890@mobile.com`)
-- This is a workaround since Appwrite doesn't natively support phone number authentication
-- For production, consider implementing proper phone number verification with SMS
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Configure environment variables:
+   - Copy `env.example` to `.env`
+   - Update the MongoDB connection string in `.env`
+
+4. Start the backend server:
+   ```bash
+   npm start
+   ```
+
+The server will run on `http://localhost:5000`
+
+### 2. Frontend Setup
+
+1. Install Expo CLI (if not already installed):
+   ```bash
+   npm install -g @expo/cli
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start the Expo development server:
+   ```bash
+   npx expo start
+   ```
+
+## API Endpoints
+
+- `GET /api/health` - Health check
+- `GET /api/inquiries` - Get all inquiries
+- `GET /api/inquiries/:id` - Get single inquiry by ID
+
+**Note: This is a read-only application. Create, update, and delete operations are not available.**
+
+## Database
+
+The app connects directly to MongoDB using the connection string from the `.env` file:
+- Database: `nxs`
+- Collection: `inquiries`
+- Schema: `{ name, email, mobile, message, createdAt }`
+- No test data - only real data from your MongoDB database
+
+## Features
+
+- ✅ Direct MongoDB integration (no test data)
+- ✅ Real-time data fetching from database
+- ✅ Read-only inquiry viewing
+- ✅ Modern UI with dark theme
+- ✅ Responsive design
 
 ## Troubleshooting
 
-- Make sure your Appwrite project ID is correctly set
-- Check that email/password authentication is enabled in Appwrite
-- Ensure all dependencies are installed
-- Check console for any error messages 
+### Backend Issues
+- Make sure MongoDB connection string is correct
+- Check if port 5000 is available
+- Verify all dependencies are installed
+
+### Frontend Issues
+- For Android emulator, the API URL is set to `10.0.2.2:5000`
+- For iOS simulator, use `localhost:5000`
+- Make sure the backend server is running
+
+## Environment Variables
+
+Create a `.env` file in the backend directory:
+
+```env
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/nxs
+PORT=5000
+``` 
