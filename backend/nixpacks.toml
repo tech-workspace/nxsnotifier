@@ -2,10 +2,10 @@
 nixPkgs = ["nodejs", "npm"]
 
 [phases.install]
-cmds = ["npm install"]
+cmds = ["npm install --no-audit --no-fund"]
 
 [phases.build]
-cmds = ["echo 'No build step required for Node.js'"]
+cmds = ["echo 'Build completed'"]
 
 [start]
 cmd = "npm start" 

@@ -35,24 +35,17 @@ TRUST_PROXY=true
 
 ### Step 4: Configure Service Settings
 
-**Option 1: Docker Build (Recommended)**
-1. Go to "Settings" tab
-2. Set the following:
-   - **Root Directory**: `backend`
-   - **Builder**: `Dockerfile`
-   - **Dockerfile Path**: `Dockerfile`
-
-**Option 2: Nixpacks Build**
+**Recommended Configuration:**
 1. Go to "Settings" tab
 2. Set the following:
    - **Root Directory**: `backend`
    - **Build Command**: `npm install`
    - **Start Command**: `npm start`
 
-**Option 3: Custom Build Script**
+**Alternative Configuration:**
 If the above doesn't work, try these settings:
 - **Root Directory**: `backend`
-- **Build Command**: `chmod +x build.sh && ./build.sh`
+- **Build Command**: `chmod +x deploy.sh && ./deploy.sh`
 - **Start Command**: `npm start`
 
 ### Step 5: Deploy
