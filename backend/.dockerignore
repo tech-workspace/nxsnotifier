@@ -1,0 +1,15 @@
+node_modules 
+npm-debug.log 
+.git 
+.gitignore 
+README.md 
+.env 
+.env.local 
+.env.production 
+railway.env 
+railway.toml 
+railway.json 
+nixpacks.toml 
+build.sh 
+fix-*.bat 
+fix-*.sh 

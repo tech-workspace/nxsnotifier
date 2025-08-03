@@ -34,13 +34,22 @@ TRUST_PROXY=true
 ```
 
 ### Step 4: Configure Service Settings
+
+**Option 1: Docker Build (Recommended)**
 1. Go to "Settings" tab
 2. Set the following:
    - **Root Directory**: `backend`
-   - **Build Command**: `npm install` (or `./build.sh`)
+   - **Builder**: `Dockerfile`
+   - **Dockerfile Path**: `Dockerfile`
+
+**Option 2: Nixpacks Build**
+1. Go to "Settings" tab
+2. Set the following:
+   - **Root Directory**: `backend`
+   - **Build Command**: `npm install`
    - **Start Command**: `npm start`
 
-**Alternative Configuration:**
+**Option 3: Custom Build Script**
 If the above doesn't work, try these settings:
 - **Root Directory**: `backend`
 - **Build Command**: `chmod +x build.sh && ./build.sh`
@@ -55,13 +64,13 @@ If the above doesn't work, try these settings:
 
 ### Railway Configuration Files
 
-#### `backend/railway.json`
+#### `backend/railway.json` (Docker Build)
 ```json
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS",
-    "buildCommand": "npm install"
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile"
   },
   "deploy": {
     "startCommand": "npm start",
@@ -71,6 +80,34 @@ If the above doesn't work, try these settings:
     "restartPolicyMaxRetries": 10
   }
 }
+```
+
+#### `backend/Dockerfile`
+```dockerfile
+# Use Node.js 18 Alpine image
+FROM node:18-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files first for better caching
+COPY package*.json ./
+
+# Install dependencies using npm install (not npm ci)
+RUN npm install
+
+# Copy the rest of the application
+COPY . .
+
+# Expose port
+EXPOSE 5000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:5000/api/health || exit 1
+
+# Start the application
+CMD ["npm", "start"]
 ```
 
 #### `backend/nixpacks.toml`
