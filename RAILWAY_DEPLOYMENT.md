@@ -120,6 +120,12 @@ const PROD_API_URL = 'https://your-app-name.railway.app/api';
    - Verify all dependencies are listed
    - Check build logs for specific errors
 
+2. **Package Lock Issues (EUSAGE Error)**
+   - Delete `package-lock.json` and run `npm install` locally
+   - Ensure all dependencies are properly listed in `package.json`
+   - Check for version conflicts in dependencies
+   - Use `npm install` instead of `npm ci` if needed
+
 2. **Environment Variables**
    - Ensure all required variables are set
    - Check for typos in variable names

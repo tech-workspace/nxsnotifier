@@ -25,6 +25,7 @@ npm run build:ios
 ```
 
 📖 **Full deployment guide**: [PRODUCTION_DEPLOYMENT.md](./PRODUCTION_DEPLOYMENT.md)
+🚂 **Railway backend guide**: [RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md)
 
 ## 📱 Features
 
@@ -136,7 +137,8 @@ npm run submit:ios
 ```
 
 ### Backend Deployment
-- Deploy to [Render](https://render.com) or [Railway](https://railway.app)
+- **Railway** (Recommended): Use `deploy-railway.bat` or follow [RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md)
+- **Render**: Follow [PRODUCTION_DEPLOYMENT.md](./PRODUCTION_DEPLOYMENT.md)
 - Update `app/config/api.js` with production URL
 - Set environment variables in hosting platform
 
