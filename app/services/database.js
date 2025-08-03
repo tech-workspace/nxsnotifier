@@ -92,33 +92,7 @@ export const getUnreadCount = async () => {
   }
 };
 
-// Trigger check for new inquiries
-export const checkForNewInquiries = async () => {
-  try {
-    const apiUrl = `${getApiUrl(ENDPOINTS.INQUIRIES).replace('/inquiries', '')}/ws/check-new-inquiries`;
-    console.log('🔍 Triggering check for new inquiries:', apiUrl);
-    
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Error triggering new inquiries check:', errorText);
-      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-    }
-    
-    const data = await response.json();
-    console.log('✅ New inquiries check triggered:', data.message);
-    return data;
-  } catch (error) {
-    console.error('❌ Failed to trigger new inquiries check:', error);
-    throw error;
-  }
-};
+
 
 // Health check
 export const checkApiHealth = async () => {

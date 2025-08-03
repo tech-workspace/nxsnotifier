@@ -3,7 +3,6 @@ import { View, Text } from 'react-native';
 import { useEffect } from 'react';
 import { router } from 'expo-router';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { NotificationProvider } from './context/NotificationContext';
 
 function RootLayoutNav() {
   const { user, loading } = useAuth();
@@ -47,9 +46,7 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <NotificationProvider>
-        <RootLayoutNav />
-      </NotificationProvider>
+      <RootLayoutNav />
     </AuthProvider>
   );
 } 

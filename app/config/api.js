@@ -7,7 +7,8 @@ const DEV_API_URL_IOS = 'http://localhost:5000/api'; // iOS Simulator
 const DEV_API_URL_WEB = 'http://localhost:5000/api'; // Web browser
 
 // Production environment (when deployed)
-const PROD_API_URL = 'https://your-production-api.com/api';
+// Update this to your actual production backend URL
+const PROD_API_URL = 'https://your-backend-domain.com/api';
 
 // Get the correct API URL based on environment
 const getApiBaseUrl = () => {
@@ -17,10 +18,17 @@ const getApiBaseUrl = () => {
     return DEV_API_URL_WEB;
   }
   
-  // For React Native, we'll use a simple approach
-  // You can enhance this with Platform.OS detection if needed
-  console.log('📱 Detected React Native environment, using 10.0.2.2:5000');
-  return DEV_API_URL_ANDROID; // Default to Android emulator URL
+  // For React Native builds, use production URL
+  // For development, use local URLs
+  const isDevelopment = __DEV__;
+  
+  if (isDevelopment) {
+    console.log('📱 Detected React Native development environment, using 10.0.2.2:5000');
+    return DEV_API_URL_ANDROID;
+  } else {
+    console.log('📱 Detected React Native production environment, using production URL');
+    return PROD_API_URL;
+  }
 };
 
 export const API_BASE_URL = getApiBaseUrl();

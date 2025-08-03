@@ -12,8 +12,7 @@ import {
   Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getInquiries, markInquiryAsRead, checkForNewInquiries } from '../services/database';
-import { useNotifications } from '../context/NotificationContext';
+import { getInquiries, markInquiryAsRead, getUnreadCount } from '../services/database';
 
 const InquiryItem = ({ item, onPress, isUnread }) => (
   <TouchableOpacity
@@ -109,11 +108,12 @@ const Inquiries = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [lastFetchTime, setLastFetchTime] = useState(null);
 
-  // Use notification context
-  const { unreadCount, isConnected, decrementUnreadCount } = useNotifications();
+  // Local state for unread count
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     fetchInquiries();
+    fetchUnreadCount();
   }, []);
 
   // Force refresh when component mounts
@@ -126,18 +126,12 @@ const Inquiries = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const triggerNewInquiriesCheck = async () => {
+  const fetchUnreadCount = async () => {
     try {
-      const result = await checkForNewInquiries();
-      console.log('✅ Checked for new inquiries:', result.found, 'found');
-
-      if (result.found > 0) {
-        // If new inquiries were found, refresh the list
-        await fetchInquiries();
-        Alert.alert('New Inquiries', `${result.found} new inquiry(ies) found!`);
-      }
+      const count = await getUnreadCount();
+      setUnreadCount(count);
     } catch (err) {
-      console.error('❌ Error checking for new inquiries:', err);
+      console.error('❌ Error fetching unread count:', err);
     }
   };
 
@@ -179,8 +173,8 @@ const Inquiries = () => {
           )
         );
 
-        // Update notification context
-        decrementUnreadCount();
+        // Update local unread count
+        setUnreadCount(prev => Math.max(0, prev - 1));
       } catch (err) {
         console.error('❌ Error marking inquiry as read:', err);
       }
@@ -200,7 +194,7 @@ const Inquiries = () => {
     setRefreshing(true);
     try {
       await fetchInquiries();
-      await triggerNewInquiriesCheck();
+      await fetchUnreadCount();
     } finally {
       setRefreshing(false);
     }
@@ -209,8 +203,8 @@ const Inquiries = () => {
   const handleRefreshIconPress = async () => {
     setRefreshing(true);
     try {
-      await triggerNewInquiriesCheck();
       await fetchInquiries();
+      await fetchUnreadCount();
     } finally {
       setRefreshing(false);
     }
@@ -241,12 +235,6 @@ const Inquiries = () => {
                 style={refreshing && styles.rotatingIcon}
               />
             </TouchableOpacity>
-          </View>
-          <View style={styles.connectionStatus}>
-            <View style={[styles.connectionDot, { backgroundColor: isConnected ? '#4CAF50' : '#f44336' }]} />
-            <Text style={styles.connectionText}>
-              {isConnected ? 'Real-time Connected' : 'Real-time Disconnected'}
-            </Text>
           </View>
         </View>
         <View style={styles.loadingContainer}>
@@ -282,12 +270,6 @@ const Inquiries = () => {
                 style={refreshing && styles.rotatingIcon}
               />
             </TouchableOpacity>
-          </View>
-          <View style={styles.connectionStatus}>
-            <View style={[styles.connectionDot, { backgroundColor: isConnected ? '#4CAF50' : '#f44336' }]} />
-            <Text style={styles.connectionText}>
-              {isConnected ? 'Real-time Connected' : 'Real-time Disconnected'}
-            </Text>
           </View>
         </View>
         <View style={styles.errorContainer}>
@@ -329,12 +311,6 @@ const Inquiries = () => {
         <Text style={styles.headerSubtitle}>
           {inquiries.length} total inquiries • {unreadCount} unread
         </Text>
-        <View style={styles.connectionStatus}>
-          <View style={[styles.connectionDot, { backgroundColor: isConnected ? '#4CAF50' : '#f44336' }]} />
-          <Text style={styles.connectionText}>
-            {isConnected ? 'Real-time Connected' : 'Real-time Disconnected'}
-          </Text>
-        </View>
         {lastFetchTime && (
           <Text style={styles.lastUpdateText}>
             Last updated: {lastFetchTime.toLocaleTimeString()}
@@ -594,26 +570,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     lineHeight: 24,
   },
-  connectionStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 20,
-    backgroundColor: '#2a2a2a',
-  },
-  connectionDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 8,
-  },
-  connectionText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
+
 });
 
 export default Inquiries; 
