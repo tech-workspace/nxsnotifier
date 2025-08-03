@@ -37,8 +37,14 @@ TRUST_PROXY=true
 1. Go to "Settings" tab
 2. Set the following:
    - **Root Directory**: `backend`
-   - **Build Command**: `npm install`
+   - **Build Command**: `npm install` (or `./build.sh`)
    - **Start Command**: `npm start`
+
+**Alternative Configuration:**
+If the above doesn't work, try these settings:
+- **Root Directory**: `backend`
+- **Build Command**: `chmod +x build.sh && ./build.sh`
+- **Start Command**: `npm start`
 
 ### Step 5: Deploy
 1. Railway will automatically detect the changes
@@ -47,12 +53,15 @@ TRUST_PROXY=true
 
 ## 🔧 Configuration Files
 
-### Railway Configuration (`backend/railway.json`)
+### Railway Configuration Files
+
+#### `backend/railway.json`
 ```json
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS"
+    "builder": "NIXPACKS",
+    "buildCommand": "npm install"
   },
   "deploy": {
     "startCommand": "npm start",
@@ -62,6 +71,21 @@ TRUST_PROXY=true
     "restartPolicyMaxRetries": 10
   }
 }
+```
+
+#### `backend/nixpacks.toml`
+```toml
+[phases.setup]
+nixPkgs = ["nodejs", "npm"]
+
+[phases.install]
+cmds = ["npm install"]
+
+[phases.build]
+cmds = ["echo 'No build step required for Node.js'"]
+
+[start]
+cmd = "npm start"
 ```
 
 ### Environment Variables (`backend/railway.env`)
