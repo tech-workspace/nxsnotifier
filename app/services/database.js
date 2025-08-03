@@ -6,14 +6,18 @@ import { API_BASE_URL, ENDPOINTS, getApiUrl } from '../config/api';
 export const getInquiries = async () => {
   try {
     const apiUrl = getApiUrl(ENDPOINTS.INQUIRIES);
+    console.log('🚀 ===== INQUIRIES API CALL START =====');
     console.log('🌐 Attempting to connect to API:', apiUrl);
     console.log('🔧 API Base URL:', API_BASE_URL);
     console.log('📱 Platform detection:', typeof window !== 'undefined' ? 'Web' : 'React Native');
     console.log('🔍 Full API URL being used:', apiUrl);
+    console.log('⏰ Timestamp:', new Date().toISOString());
     
     // Add timeout to the fetch request
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
+    console.log('📡 Making fetch request...');
     
     // Connect to your backend API
     const response = await fetch(apiUrl, {
@@ -27,19 +31,24 @@ export const getInquiries = async () => {
     
     clearTimeout(timeoutId);
     
-    console.log('📡 API Response status:', response.status);
-    console.log('📡 API Response ok:', response.ok);
-    console.log('📡 API Response headers:', response.headers);
+    console.log('📡 API Response received:');
+    console.log('📡 Response status:', response.status);
+    console.log('📡 Response ok:', response.ok);
+    console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
     
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ API Error response:', errorText);
+      console.error('❌ ===== INQUIRIES API CALL FAILED =====');
       throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
     }
     
     const data = await response.json();
-    console.log('✅ API Response data:', data);
-    console.log('📊 Fetched inquiries count:', data.length);
+    console.log('✅ API Response data received:');
+    console.log('✅ Data type:', typeof data);
+    console.log('✅ Data length:', Array.isArray(data) ? data.length : 'Not an array');
+    console.log('✅ First item:', data[0] || 'No data');
+    console.log('✅ ===== INQUIRIES API CALL SUCCESS =====');
     
     // Check if we got real data or mock data
     if (data.length > 0 && data[0]._id && typeof data[0]._id === 'object') {
@@ -50,7 +59,10 @@ export const getInquiries = async () => {
     
     return data;
   } catch (error) {
-    console.error('❌ Failed to fetch inquiries:', error);
+    console.error('❌ ===== INQUIRIES API CALL ERROR =====');
+    console.error('❌ Error type:', error.name);
+    console.error('❌ Error message:', error.message);
+    console.error('❌ Error stack:', error.stack);
     
     // Provide more specific error messages
     if (error.name === 'AbortError') {

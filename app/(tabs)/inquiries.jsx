@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getInquiries, markInquiryAsRead, getUnreadCount } from '../services/database';
+import { API_BASE_URL } from '../config/api';
 
 const InquiryItem = ({ item, onPress, isUnread }) => (
   <TouchableOpacity
@@ -112,6 +113,11 @@ const Inquiries = () => {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
+    console.log('📱 ===== INQUIRIES PAGE LOADED =====');
+    console.log('🌐 API_BASE_URL in inquiries:', API_BASE_URL);
+    console.log('✅ Using Railway:', API_BASE_URL.includes('railway.app'));
+    console.log('📱 ===== END INQUIRIES PAGE LOAD =====');
+
     fetchInquiries();
     fetchUnreadCount();
   }, []);

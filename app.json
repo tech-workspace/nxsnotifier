@@ -20,7 +20,6 @@
     },
     "android": {
       "package": "com.techworkspace.nxsnotifier",
-      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/img/adaptive-icon.png",
         "backgroundColor": "#ffffff"

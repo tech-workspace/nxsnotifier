@@ -1,43 +1,20 @@
 // API Configuration for React Native app
-// This file manages the backend API URL for different environments
+// This file manages the backend API URL - using production Railway service for all environments
 
-// Development environment configurations
-const DEV_API_URL_ANDROID_EMULATOR = 'http://10.0.2.2:5000/api'; // Android Emulator
-const DEV_API_URL_ANDROID_DEVICE = 'http://10.0.0.84:5000/api'; // Physical Android Device (update IP)
-const DEV_API_URL_IOS = 'http://localhost:5000/api'; // iOS Simulator
-const DEV_API_URL_WEB = 'http://localhost:5000/api'; // Web browser
+// Production environment (Railway hosted backend)
+const PROD_API_URL = 'https://nxsnotifier.up.railway.app/api';
 
-// Production environment (when deployed)
-// Update this to your actual production backend URL
-const PROD_API_URL = 'https://nxsnotifier-backend.onrender.com/api';
+// Use production URL for all environments
+export const API_BASE_URL = PROD_API_URL;
 
-// Get the correct API URL based on environment
-const getApiBaseUrl = () => {
-  // Check if we're in a web environment
-  if (typeof window !== 'undefined') {
-    console.log('🌐 Detected web environment, using localhost:5000');
-    return DEV_API_URL_WEB;
-  }
-  
-  // For React Native builds, use production URL
-  // For development, use local URLs
-  const isDevelopment = __DEV__;
-  
-  if (isDevelopment) {
-    // For Android, we need to detect if it's an emulator or physical device
-    // For now, we'll use a more flexible approach
-    console.log('📱 Detected React Native development environment');
-    
-    // You can update this IP address to match your computer's IP
-    // To find your IP: on Windows run 'ipconfig', on Mac/Linux run 'ifconfig'
-    return DEV_API_URL_ANDROID_DEVICE;
-  } else {
-    console.log('📱 Detected React Native production environment, using production URL');
-    return PROD_API_URL;
-  }
-};
-
-export const API_BASE_URL = getApiBaseUrl();
+// Debug logging - this should appear immediately when app loads
+console.log('🚀 ===== API CONFIGURATION LOADED =====');
+console.log('🔧 API Configuration Loaded:');
+console.log('🌐 API_BASE_URL:', API_BASE_URL);
+console.log('📱 Environment:', typeof window !== 'undefined' ? 'Web' : 'React Native');
+console.log('🔍 Using Railway backend for all environments');
+console.log('✅ Configuration is using Railway URL:', API_BASE_URL === 'https://nxsnotifier.up.railway.app/api');
+console.log('🚀 ===== END API CONFIGURATION =====');
 
 // API endpoints
 export const ENDPOINTS = {
@@ -46,7 +23,11 @@ export const ENDPOINTS = {
 };
 
 // Full API URLs
-export const getApiUrl = (endpoint) => `${API_BASE_URL}${endpoint}`;
+export const getApiUrl = (endpoint) => {
+  const fullUrl = `${API_BASE_URL}${endpoint}`;
+  console.log('🔗 Generated API URL:', fullUrl);
+  return fullUrl;
+};
 
 export default {
   API_BASE_URL,
