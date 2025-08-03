@@ -11,11 +11,25 @@ export const getInquiries = async () => {
     console.log('📱 Platform detection:', typeof window !== 'undefined' ? 'Web' : 'React Native');
     console.log('🔍 Full API URL being used:', apiUrl);
     
+    // Add timeout to the fetch request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
     // Connect to your backend API
-    const response = await fetch(apiUrl);
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
     
     console.log('📡 API Response status:', response.status);
     console.log('📡 API Response ok:', response.ok);
+    console.log('📡 API Response headers:', response.headers);
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -37,6 +51,18 @@ export const getInquiries = async () => {
     return data;
   } catch (error) {
     console.error('❌ Failed to fetch inquiries:', error);
+    
+    // Provide more specific error messages
+    if (error.name === 'AbortError') {
+      console.error('⏰ Request timed out - check if backend server is running');
+      throw new Error('Request timed out. Please check if the backend server is running and accessible.');
+    }
+    
+    if (error.message.includes('Network request failed')) {
+      console.error('🌐 Network request failed - check network connection and IP address');
+      throw new Error('Network request failed. Please check your network connection and ensure the backend server is running on the correct IP address.');
+    }
+    
     throw error;
   }
 };

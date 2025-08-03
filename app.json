@@ -1,7 +1,7 @@
 {
   "expo": {
     "scheme": "nxsnotifier",
-    "name": "nxsnotifier",
+    "name": "NXS Notifier",
     "slug": "nxsnotifier",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -14,7 +14,9 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.techworkspace.nxsnotifier",
+      "buildNumber": "1"
     },
     "android": {
       "package": "com.techworkspace.nxsnotifier",

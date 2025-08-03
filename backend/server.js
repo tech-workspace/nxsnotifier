@@ -6,14 +6,38 @@ require('dotenv').config();
 const app = express();
 
 const PORT = process.env.PORT || 5000;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// Production security settings
+if (NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+  console.log('🔒 Production mode enabled - security settings applied');
+}
+
+// CORS configuration based on environment
+const corsOptions = {
+  origin: NODE_ENV === 'production' 
+    ? ['https://nxsnotifier.vercel.app', 'https://nxsnotifier-backend.onrender.com']
+    : '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma'],
+  credentials: true
+};
 
 // Middleware
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma']
-}));
-app.use(express.json());
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Security headers for production
+if (NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    next();
+  });
+}
 
 // MongoDB Connection with Mongoose
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -25,6 +49,7 @@ if (!MONGODB_URI) {
 
 console.log('🔍 Attempting to connect to MongoDB...');
 console.log('📡 URI:', MONGODB_URI.replace(/\/\/.*@/, '//***:***@')); // Hide credentials
+console.log('🌍 Environment:', NODE_ENV);
 
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
