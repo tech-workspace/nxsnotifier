@@ -12,8 +12,9 @@ import {
   Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getInquiries, markInquiryAsRead, getUnreadCount } from '../services/database';
+import { getInquiries, markInquiryAsRead, getUnreadCount, testNetworkConnectivity } from '../services/database';
 import { API_BASE_URL } from '../config/api';
+import { router } from 'expo-router';
 
 const InquiryItem = ({ item, onPress, isUnread }) => (
   <TouchableOpacity
@@ -146,6 +147,19 @@ const Inquiries = () => {
       setLoading(true);
       setError(null);
       console.log('🔍 Starting to fetch inquiries...');
+
+      // First test network connectivity
+      console.log('🌐 Testing network connectivity before fetching inquiries...');
+      const isConnected = await testNetworkConnectivity();
+
+      if (!isConnected) {
+        console.error('❌ Network connectivity test failed');
+        setError('Network connection issue. Please check your internet connection and try again.');
+        Alert.alert('Network Error', 'Unable to connect to the server. Please check your internet connection and try again.');
+        return;
+      }
+
+      console.log('✅ Network connectivity test passed, fetching inquiries...');
       const data = await getInquiries();
       console.log('✅ Fetched inquiries successfully:', data);
       console.log('📊 Number of inquiries:', data.length);
@@ -153,8 +167,19 @@ const Inquiries = () => {
       setLastFetchTime(new Date());
     } catch (err) {
       console.error('❌ Error fetching inquiries:', err);
-      setError('Failed to load inquiries. Please try again.');
-      Alert.alert('Error', 'Failed to load inquiries. Please check your connection and try again.');
+
+      // Provide more specific error messages
+      let errorMessage = 'Failed to load inquiries. Please try again.';
+      if (err.message.includes('timeout')) {
+        errorMessage = 'Request timed out. Please check your connection and try again.';
+      } else if (err.message.includes('Network request failed')) {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+      } else if (err.message.includes('fetch')) {
+        errorMessage = 'Connection error. Please check your internet connection and try again.';
+      }
+
+      setError(errorMessage);
+      Alert.alert('Error', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -393,6 +418,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
+
   refreshButton: {
     padding: 8,
     borderRadius: 20,
@@ -400,6 +426,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#333',
   },
+
   rotatingIcon: {
     transform: [{ rotate: '360deg' }],
   },
@@ -576,6 +603,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     lineHeight: 24,
   },
+
 
 });
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import Avatar from '../../assets/img/icon.png';
@@ -24,6 +25,12 @@ const Profile = () => {
       <Image source={Avatar} style={styles.avatar} />
       <Text style={styles.name}>{user?.name || 'No Name'}</Text>
       <Text style={styles.email}>{user?.email}</Text>
+
+      <TouchableOpacity style={styles.logsButton} onPress={() => router.push('/logs')}>
+        <Ionicons name="document-text" size={20} color="#000" />
+        <Text style={styles.logsButtonText}>Network Logs</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutButtonText}>Sign Out</Text>
       </TouchableOpacity>
@@ -55,7 +62,22 @@ const styles = StyleSheet.create({
   email: {
     fontSize: 16,
     color: '#fff',
-    marginBottom: 30,
+    marginBottom: 20,
+  },
+  logsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFD700',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginBottom: 15,
+    gap: 8,
+  },
+  logsButtonText: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '600',
   },
   logoutButton: {
     backgroundColor: '#FFD700',

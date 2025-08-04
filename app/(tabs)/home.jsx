@@ -1,10 +1,7 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { useAuth } from '../context/AuthContext';
 import Logo from '../../assets/img/logo-1.png';
 
 const Home = () => {
-  const { user } = useAuth();
-
   return (
     <View style={styles.container}>
       <Image source={Logo} style={styles.img} />
@@ -38,23 +35,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#FFD700',
   },
-  card: {
-    backgroundColor: '#1a1a1a',
-    padding: 20,
-    borderRadius: 5,
-    boxShadow: '0px 2px 3.84px rgba(255, 215, 0, 0.25)',
-    elevation: 5,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#FFD700',
-  },
-  cardText: {
-    fontSize: 16,
-    marginBottom: 10,
-    color: '#fff',
-  },
-  welcomeText: {
-    fontSize: 14,
-    color: '#FFD700',
-  },
+
+
 }); 

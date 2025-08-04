@@ -15,16 +15,18 @@ export const getInquiries = async () => {
     
     // Add timeout to the fetch request
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout for mobile
     
     console.log('📡 Making fetch request...');
     
-    // Connect to your backend API
+    // Connect to your backend API with additional headers for mobile compatibility
     const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'User-Agent': 'NXSNotifier-Mobile/1.0',
+        'Cache-Control': 'no-cache',
       },
       signal: controller.signal,
     });
@@ -64,7 +66,7 @@ export const getInquiries = async () => {
     console.error('❌ Error message:', error.message);
     console.error('❌ Error stack:', error.stack);
     
-    // Provide more specific error messages
+    // Provide more specific error messages for mobile debugging
     if (error.name === 'AbortError') {
       console.error('⏰ Request timed out - check if backend server is running');
       throw new Error('Request timed out. Please check if the backend server is running and accessible.');
@@ -73,6 +75,11 @@ export const getInquiries = async () => {
     if (error.message.includes('Network request failed')) {
       console.error('🌐 Network request failed - check network connection and IP address');
       throw new Error('Network request failed. Please check your network connection and ensure the backend server is running on the correct IP address.');
+    }
+    
+    if (error.message.includes('fetch')) {
+      console.error('🌐 Fetch error - possible network or CORS issue');
+      throw new Error('Network error. Please check your internet connection and try again.');
     }
     
     throw error;
@@ -135,14 +142,68 @@ export const getUnreadCount = async () => {
 // Health check
 export const checkApiHealth = async () => {
   try {
-    const response = await fetch(getApiUrl(ENDPOINTS.HEALTH));
+    console.log('🏥 Testing API health...');
+    const response = await fetch(getApiUrl(ENDPOINTS.HEALTH), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'NXSNotifier-Mobile/1.0',
+      },
+    });
+    
+    console.log('🏥 Health check response status:', response.status);
+    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return await response.json();
+    
+    const data = await response.json();
+    console.log('🏥 Health check successful:', data);
+    return data;
   } catch (error) {
-    console.error('API health check failed:', error);
+    console.error('❌ API health check failed:', error);
     throw error;
+  }
+};
+
+// Test network connectivity
+export const testNetworkConnectivity = async () => {
+  try {
+    console.log('🌐 Testing network connectivity...');
+    
+    // Test basic internet connectivity
+    const testResponse = await fetch('https://httpbin.org/get', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+    
+    if (testResponse.ok) {
+      console.log('✅ Basic internet connectivity: OK');
+    } else {
+      console.log('❌ Basic internet connectivity: FAILED');
+    }
+    
+    // Test our API connectivity
+    const apiResponse = await fetch(getApiUrl(ENDPOINTS.HEALTH), {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+    
+    if (apiResponse.ok) {
+      console.log('✅ API connectivity: OK');
+      return true;
+    } else {
+      console.log('❌ API connectivity: FAILED');
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Network connectivity test failed:', error);
+    return false;
   }
 };
 
