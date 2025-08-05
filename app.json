@@ -1,14 +1,14 @@
 {
   "expo": {
     "scheme": "nxsnotifier",
-    "name": "NXS Notifier",
+    "name": "Nexus Notifier",
     "slug": "nxsnotifier",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/img/logo-1.png",
+    "icon": "./assets/img/logo-2.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/img/logo-1.png",
+      "image": "./assets/img/logo-2.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -20,7 +20,7 @@
     "android": {
       "package": "com.techworkspace.nxsnotifier",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/img/logo-1.png",
+        "foregroundImage": "./assets/img/logo-2.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -30,7 +30,7 @@
       ]
     },
     "web": {
-      "favicon": "./assets/img/favicon.png"
+      "favicon": "./assets/img/logo-2.png"
     },
     "plugins": [
       "expo-router",
