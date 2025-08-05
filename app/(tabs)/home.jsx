@@ -1,9 +1,12 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Logo from '../../assets/img/logo-1.png';
 
 const Home = () => {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: insets.bottom + 100 }]}>
       <Image source={Logo} style={styles.img} />
 
       <Text style={styles.title}>Nexus Plater</Text>

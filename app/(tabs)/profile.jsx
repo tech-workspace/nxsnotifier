@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
-import Avatar from '../../assets/img/icon.png';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Avatar from '../../assets/img/logo-1.png';
 
 const Profile = () => {
+  const insets = useSafeAreaInsets();
   const { user, logout } = useAuth();
 
   const handleLogout = async () => {
@@ -21,7 +23,7 @@ const Profile = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: insets.bottom + 100 }]}>
       <Image source={Avatar} style={styles.avatar} />
       <Text style={styles.name}>{user?.name || 'No Name'}</Text>
       <Text style={styles.email}>{user?.email}</Text>

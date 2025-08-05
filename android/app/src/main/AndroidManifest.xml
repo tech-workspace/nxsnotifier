@@ -26,6 +26,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="nxsnotifier"/>
+        <data android:scheme="com.techworkspace.nxsnotifier"/>
         <data android:scheme="exp+nxsnotifier"/>
       </intent-filter>
     </activity>

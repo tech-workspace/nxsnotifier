@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { getInquiries, markInquiryAsRead, getUnreadCount, testNetworkConnectivity } from '../services/database';
 import { API_BASE_URL } from '../config/api';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const InquiryItem = ({ item, onPress, isUnread }) => (
   <TouchableOpacity
@@ -102,6 +103,7 @@ const InquiryModal = ({ visible, inquiry, onClose, onMarkAsRead }) => (
 );
 
 const Inquiries = () => {
+  const insets = useSafeAreaInsets();
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -315,7 +317,7 @@ const Inquiries = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { paddingBottom: insets.bottom + 100 }]}>
       <View style={styles.header}>
         <View style={styles.headerTopRow}>
           <View style={styles.headerTitleContainer}>
