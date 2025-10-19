@@ -1,12 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Client, Account, ID } from 'appwrite';
-
-// Appwrite configuration
-const client = new Client()
-  .setEndpoint('https://cloud.appwrite.io/v1')
-  .setProject('6880db04000336a9886c');
-
-const account = new Account(client);
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { signupUser, loginUser, getUserProfile } from '../services/database';
 
 const AuthContext = createContext();
 
@@ -20,6 +14,7 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,110 +23,140 @@ export const AuthProvider = ({ children }) => {
 
   const checkUser = async () => {
     try {
-      console.log('Checking user session...');
-      const session = await account.get();
-      console.log('Active session found:', session);
-      setUser({
-        id: session.$id,
-        email: session.email,
-        name: session.name
-      });
+      const storedToken = await AsyncStorage.getItem('userToken');
+
+      if (storedToken) {
+        // Verify token by fetching user profile
+        try {
+          const result = await getUserProfile(storedToken);
+          if (result.success && result.user) {
+            setUser(result.user);
+            setToken(storedToken);
+          } else {
+            // Token is invalid, try auto-login with stored credentials
+            await tryAutoLogin();
+          }
+        } catch (error) {
+          // Token is invalid or expired, try auto-login with stored credentials
+          await tryAutoLogin();
+        }
+      } else {
+        // No token, try auto-login with stored credentials
+        await tryAutoLogin();
+      }
     } catch (error) {
-      console.log('No active session or unauthorized:', error.message);
-      // 401 Unauthorized is expected when there's no valid session
+      console.error('Check user error:', error);
       setUser(null);
+      setToken(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const login = async (email, password) => {
+  const tryAutoLogin = async () => {
     try {
-      console.log('Attempting login with:', email);
-      console.log('Account methods (login):', Object.getOwnPropertyNames(Object.getPrototypeOf(account)));
-      
-      // First, try to delete any existing sessions
-      try {
-        await account.deleteSessions();
-      } catch (sessionError) {
-        console.log('No existing sessions to delete:', sessionError.message);
+      const storedMobile = await AsyncStorage.getItem('userMobile');
+      const storedPassword = await AsyncStorage.getItem('userPassword');
+
+      if (storedMobile && storedPassword) {
+        // Attempt auto-login
+        const result = await loginUser(storedMobile, storedPassword);
+        if (result.success && result.token) {
+          await AsyncStorage.setItem('userToken', result.token);
+          setToken(result.token);
+          setUser(result.user);
+        } else {
+          // Clear invalid credentials
+          await AsyncStorage.multiRemove(['userToken', 'userMobile', 'userPassword']);
+          setUser(null);
+          setToken(null);
+        }
       }
-      
-      const session = await account.createEmailPasswordSession(email, password);
-      console.log('Login successful:', session);
-      
-      // Get user details
-      const userDetails = await account.get();
-      const user = {
-        id: userDetails.$id,
-        email: userDetails.email,
-        name: userDetails.name
-      };
-      
-      setUser(user);
-      return { success: true };
+    } catch (error) {
+      console.error('Auto-login error:', error);
+      setUser(null);
+      setToken(null);
+    }
+  };
+
+  const login = async (mobile, password, rememberCredentials = true) => {
+    try {
+      const result = await loginUser(mobile, password);
+
+      if (result.success && result.token) {
+        // Store token in AsyncStorage
+        await AsyncStorage.setItem('userToken', result.token);
+
+        // Store credentials for auto-login if requested
+        if (rememberCredentials) {
+          await AsyncStorage.setItem('userMobile', mobile);
+          await AsyncStorage.setItem('userPassword', password);
+        }
+
+        setToken(result.token);
+        setUser(result.user);
+        return { success: true };
+      } else {
+        return {
+          success: false,
+          error: 'Invalid credentials. Please try again.'
+        };
+      }
     } catch (error) {
       console.error('Login error:', error);
-      return { 
-        success: false, 
-        error: error.message || 'Invalid credentials. Please try again.' 
+      return {
+        success: false,
+        error: error.message || 'Invalid credentials. Please try again.'
       };
     }
   };
 
-  const signup = async (email, password) => {
+  const signup = async (fullName, mobile, password) => {
     try {
-      console.log('AuthContext: Attempting signup with:', email);
-      console.log('Account methods (signup):', Object.getOwnPropertyNames(Object.getPrototypeOf(account)));
-      
-      const user = await account.create(
-        ID.unique(),
-        email,
-        password,
-        email.split('@')[0] // Use email prefix as name
-      );
-      
-      console.log('AuthContext: Signup successful:', user);
-      
-      // Automatically log in after signup
-      const session = await account.createEmailPasswordSession(email, password);
-      const userDetails = await account.get();
-      
-      const userData = {
-        id: userDetails.$id,
-        email: userDetails.email,
-        name: userDetails.name
-      };
-      
-      setUser(userData);
-      return { success: true };
+      const result = await signupUser(fullName, mobile, password);
+
+      if (result.success && result.token) {
+        // Store token and credentials in AsyncStorage
+        await AsyncStorage.setItem('userToken', result.token);
+        await AsyncStorage.setItem('userMobile', mobile);
+        await AsyncStorage.setItem('userPassword', password);
+        setToken(result.token);
+        setUser(result.user);
+        return { success: true };
+      } else {
+        return {
+          success: false,
+          error: 'Failed to create account. Please try again.'
+        };
+      }
     } catch (error) {
-      console.error('AuthContext: Signup error:', error);
-      return { 
-        success: false, 
-        error: error.message || 'Failed to create account. Please try again.' 
+      console.error('Signup error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to create account. Please try again.'
       };
     }
   };
 
   const logout = async () => {
     try {
-      console.log('Attempting logout...');
-      
-      // Just clear the user state - no need to call account.get() which requires authentication
+      // Clear all auth data from AsyncStorage
+      await AsyncStorage.multiRemove(['userToken', 'userMobile', 'userPassword']);
       setUser(null);
-      console.log('Logout successful');
+      setToken(null);
       return { success: true };
     } catch (error) {
       console.error('Logout error:', error);
       // Always clear user state even if there's an error
       setUser(null);
+      setToken(null);
       return { success: true };
     }
   };
 
   const value = {
     user,
+    token,
     loading,
     login,
     signup,
@@ -144,4 +169,7 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
-}; 
+};
+
+// Default export
+export default AuthProvider;

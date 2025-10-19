@@ -1,32 +1,39 @@
 // API Configuration for React Native app
-// This file manages the backend API URL - using production Railway service for all environments
+// Using multiple backends for different services
 
-// Production environment (Railway hosted backend)
-const PROD_API_URL = 'https://nxsnotifier.up.railway.app/api';
+// API Gateway - for auth and visits (as per API_DOCUMENTATION.md)
+const API_GATEWAY_URL = 'https://apigateway.up.railway.app';
 
-// Use production URL for all environments
-export const API_BASE_URL = PROD_API_URL;
+// Local Backend - for inquiries (nxsnotifier backend)
+const LOCAL_BACKEND_URL = 'https://nxsnotifier.up.railway.app/api';
 
-// Debug logging - this should appear immediately when app loads
-console.log('🚀 ===== API CONFIGURATION LOADED =====');
-console.log('🔧 API Configuration Loaded:');
-console.log('🌐 API_BASE_URL:', API_BASE_URL);
-console.log('📱 Environment:', typeof window !== 'undefined' ? 'Web' : 'React Native');
-console.log('🔍 Using Railway backend for all environments');
-console.log('✅ Configuration is using Railway URL:', API_BASE_URL === 'https://nxsnotifier.up.railway.app/api');
-console.log('🚀 ===== END API CONFIGURATION =====');
+// Default to API Gateway
+export const API_BASE_URL = API_GATEWAY_URL;
 
-// API endpoints
+// API endpoints configuration with their respective base URLs
 export const ENDPOINTS = {
   INQUIRIES: '/inquiries',
+  VISITS: '/v1/visits',
+  AUTH_SIGNUP: '/v1/auth/signup',
+  AUTH_LOGIN: '/v1/auth/login',
+  AUTH_PROFILE: '/v1/auth/profile',
   HEALTH: '/health',
 };
 
-// Full API URLs
+// Endpoint-to-base-URL mapping
+const ENDPOINT_BASE_URLS = {
+  '/inquiries': LOCAL_BACKEND_URL,
+  '/v1/visits': API_GATEWAY_URL,
+  '/v1/auth/signup': API_GATEWAY_URL,
+  '/v1/auth/login': API_GATEWAY_URL,
+  '/v1/auth/profile': API_GATEWAY_URL,
+  '/health': LOCAL_BACKEND_URL,
+};
+
+// Full API URLs - automatically selects the correct base URL for each endpoint
 export const getApiUrl = (endpoint) => {
-  const fullUrl = `${API_BASE_URL}${endpoint}`;
-  console.log('🔗 Generated API URL:', fullUrl);
-  return fullUrl;
+  const baseUrl = ENDPOINT_BASE_URLS[endpoint] || API_BASE_URL;
+  return `${baseUrl}${endpoint}`;
 };
 
 export default {

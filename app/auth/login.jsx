@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,39 +15,72 @@ import { router } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
-  const [email, setEmail] = useState('test1@gmail.com');
-  const [password, setPassword] = useState('12345678');
+  const [mobile, setMobile] = useState('0568863388');
+  const [password, setPassword] = useState('600660');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const [autoLoginAttempted, setAutoLoginAttempted] = useState(false);
+  const { login, user } = useAuth();
 
-  const handleLogin = async () => {
-    setError('');
-    if (!email || !password) {
-      setError('Please fill in all fields');
+  // Auto-attempt login when component mounts with default credentials
+  useEffect(() => {
+    if (!autoLoginAttempted && !user) {
+      setAutoLoginAttempted(true);
+      handleLogin(true); // Silent auto-login attempt
+    }
+  }, []);
+
+  // If user is already logged in, redirect to home
+  useEffect(() => {
+    if (user) {
+      router.replace('/');
+    }
+  }, [user]);
+
+  const handleLogin = async (silentAttempt = false) => {
+    if (!silentAttempt) {
+      setError('');
+    }
+
+    if (!mobile || !password) {
+      if (!silentAttempt) {
+        setError('Please fill in all fields');
+      }
       return;
     }
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address');
+    // Basic mobile validation (10-15 digits)
+    const mobileRegex = /^[0-9]{10,15}$/;
+    if (!mobileRegex.test(mobile)) {
+      if (!silentAttempt) {
+        setError('Please enter a valid mobile number (10-15 digits)');
+      }
+      return;
+    }
+
+    if (password.length < 6) {
+      if (!silentAttempt) {
+        setError('Password must be at least 6 characters');
+      }
       return;
     }
 
     setLoading(true);
     try {
-      const result = await login(email, password);
-      
+      const result = await login(mobile, password);
+
       if (result.success) {
-        console.log('Login successful');
         router.replace('/');
       } else {
-        setError(result.error || 'Invalid credentials. Please try again.');
+        if (!silentAttempt) {
+          setError(result.error || 'Invalid credentials. Please try again.');
+        }
       }
     } catch (error) {
       console.error('Login error:', error);
-      setError('Invalid credentials. Please try again.');
+      if (!silentAttempt) {
+        setError('Invalid credentials. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -58,12 +91,12 @@ const Login = () => {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
+    <KeyboardAvoidingView
+      style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
@@ -75,15 +108,16 @@ const Login = () => {
           <Text style={styles.subtitle}>Sign in to your account</Text>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>Mobile Number</Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter your email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
+              placeholder="Enter your mobile number"
+              value={mobile}
+              onChangeText={setMobile}
+              keyboardType="phone-pad"
               autoCapitalize="none"
               autoCorrect={false}
+              maxLength={15}
             />
           </View>
 

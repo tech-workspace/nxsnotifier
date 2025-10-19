@@ -25,8 +25,8 @@ const Profile = () => {
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom + 100 }]}>
       <Image source={Avatar} style={styles.avatar} />
-      <Text style={styles.name}>{user?.name || 'No Name'}</Text>
-      <Text style={styles.email}>{user?.email}</Text>
+      <Text style={styles.name}>{user?.fullName || 'No Name'}</Text>
+      <Text style={styles.email}>{user?.mobile || 'No Mobile'}</Text>
 
       <TouchableOpacity style={styles.logsButton} onPress={() => router.push('/logs')}>
         <Ionicons name="document-text" size={20} color="#000" />

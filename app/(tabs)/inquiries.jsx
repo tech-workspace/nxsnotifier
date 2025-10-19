@@ -115,12 +115,24 @@ const Inquiries = () => {
   // Local state for unread count
   const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => {
-    console.log('📱 ===== INQUIRIES PAGE LOADED =====');
-    console.log('🌐 API_BASE_URL in inquiries:', API_BASE_URL);
-    console.log('✅ Using Railway:', API_BASE_URL.includes('railway.app'));
-    console.log('📱 ===== END INQUIRIES PAGE LOAD =====');
+  // Helper function to format date with day name, full date, and 24-hour time
+  const formatLastUpdateTime = (date) => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+    const dayName = days[date.getDay()];
+    const monthName = months[date.getMonth()];
+    const day = date.getDate();
+    const year = date.getFullYear();
+
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+
+    return `${dayName}, ${monthName} ${day}, ${year} at ${hours}:${minutes}:${seconds}`;
+  };
+
+  useEffect(() => {
     fetchInquiries();
     fetchUnreadCount();
   }, []);
@@ -128,7 +140,6 @@ const Inquiries = () => {
   // Force refresh when component mounts
   useEffect(() => {
     const timer = setTimeout(() => {
-      console.log('🔄 Force refreshing inquiries...');
       fetchInquiries();
     }, 1000);
 
@@ -140,7 +151,7 @@ const Inquiries = () => {
       const count = await getUnreadCount();
       setUnreadCount(count);
     } catch (err) {
-      console.error('❌ Error fetching unread count:', err);
+      console.error('Error fetching unread count:', err);
     }
   };
 
@@ -148,27 +159,21 @@ const Inquiries = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('🔍 Starting to fetch inquiries...');
 
       // First test network connectivity
-      console.log('🌐 Testing network connectivity before fetching inquiries...');
       const isConnected = await testNetworkConnectivity();
 
       if (!isConnected) {
-        console.error('❌ Network connectivity test failed');
         setError('Network connection issue. Please check your internet connection and try again.');
         Alert.alert('Network Error', 'Unable to connect to the server. Please check your internet connection and try again.');
         return;
       }
 
-      console.log('✅ Network connectivity test passed, fetching inquiries...');
       const data = await getInquiries();
-      console.log('✅ Fetched inquiries successfully:', data);
-      console.log('📊 Number of inquiries:', data.length);
       setInquiries(data);
       setLastFetchTime(new Date());
     } catch (err) {
-      console.error('❌ Error fetching inquiries:', err);
+      console.error('Error fetching inquiries:', err);
 
       // Provide more specific error messages
       let errorMessage = 'Failed to load inquiries. Please try again.';
@@ -195,7 +200,6 @@ const Inquiries = () => {
     if (!inquiry.isRead) {
       try {
         await markInquiryAsRead(inquiry._id);
-        console.log('✅ Marked inquiry as read:', inquiry._id);
 
         // Update local state
         setInquiries(prevInquiries =>
@@ -209,7 +213,7 @@ const Inquiries = () => {
         // Update local unread count
         setUnreadCount(prev => Math.max(0, prev - 1));
       } catch (err) {
-        console.error('❌ Error marking inquiry as read:', err);
+        console.error('Error marking inquiry as read:', err);
       }
     }
   };
@@ -346,7 +350,7 @@ const Inquiries = () => {
         </Text>
         {lastFetchTime && (
           <Text style={styles.lastUpdateText}>
-            Last updated: {lastFetchTime.toLocaleTimeString()}
+            Last updated: {formatLastUpdateTime(lastFetchTime)}
           </Text>
         )}
       </View>

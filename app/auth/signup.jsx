@@ -15,29 +15,31 @@ import { router } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 
 const Signup = () => {
-  const [email, setEmail] = useState('test1@gmail.com');
-  const [password, setPassword] = useState('12345678');
-  const [confirmPassword, setConfirmPassword] = useState('12345678');
+  const [fullName, setFullName] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { signup } = useAuth();
 
   const handleSignup = async () => {
-    console.log('Signup button clicked');
-    console.log('Email:', email);
-    console.log('Password length:', password.length);
-    console.log('Confirm password length:', confirmPassword.length);
-    
     setError('');
-    if (!email || !password || !confirmPassword) {
+    if (!fullName || !mobile || !password || !confirmPassword) {
       setError('Please fill in all fields');
       return;
     }
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address');
+    // Validate full name (2-100 characters)
+    if (fullName.length < 2 || fullName.length > 100) {
+      setError('Full name must be between 2 and 100 characters');
+      return;
+    }
+
+    // Basic mobile validation (10-15 digits)
+    const mobileRegex = /^[0-9]{10,15}$/;
+    if (!mobileRegex.test(mobile)) {
+      setError('Please enter a valid mobile number (10-15 digits)');
       return;
     }
 
@@ -51,17 +53,15 @@ const Signup = () => {
       return;
     }
 
-    console.log('All validation passed, calling signup function');
     setLoading(true);
     try {
-      const result = await signup(email, password);
-      console.log('Signup result:', result);
-      
+      const result = await signup(fullName, mobile, password);
+
       if (result.success) {
-        console.log('Signup successful');
-        router.replace('/auth/login');
+        Alert.alert('Success', 'Account created successfully!', [
+          { text: 'OK', onPress: () => router.replace('/') }
+        ]);
       } else {
-        console.log('Signup failed:', result.error);
         setError(result.error || 'Failed to create account. Please try again.');
       }
     } catch (error) {
@@ -77,12 +77,12 @@ const Signup = () => {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
+    <KeyboardAvoidingView
+      style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
@@ -94,15 +94,29 @@ const Signup = () => {
           <Text style={styles.subtitle}>Sign up to get started</Text>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>Full Name</Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter your email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
+              placeholder="Enter your full name"
+              value={fullName}
+              onChangeText={setFullName}
+              autoCapitalize="words"
+              autoCorrect={false}
+              maxLength={100}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Mobile Number</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your mobile number"
+              value={mobile}
+              onChangeText={setMobile}
+              keyboardType="phone-pad"
               autoCapitalize="none"
               autoCorrect={false}
+              maxLength={15}
             />
           </View>
 
@@ -110,7 +124,7 @@ const Signup = () => {
             <Text style={styles.label}>Password</Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter your password"
+              placeholder="Enter your password (min 6 characters)"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -132,10 +146,7 @@ const Signup = () => {
 
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
-            onPress={() => {
-              console.log('Button pressed!');
-              handleSignup();
-            }}
+            onPress={handleSignup}
             disabled={loading}
             activeOpacity={0.7}
           >
